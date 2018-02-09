@@ -1,6 +1,6 @@
 package testTaxi;
 
-public interface MessageInt {
+ interface MessageInt {
 
 
 }

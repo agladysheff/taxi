@@ -1,5 +1,6 @@
 package testTaxi;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -11,6 +12,7 @@ public class Dispatcher {
 
     private final LinkedBlockingQueue<MessageInt> senderDispatcher = new LinkedBlockingQueue<>();
     private final ConcurrentHashMap<String, String> storage = new ConcurrentHashMap<>();
+    private final List<Target> targets = new ArrayList<>();
 
     private Dispatcher() {
     }
@@ -28,11 +30,9 @@ public class Dispatcher {
     }
 
 
-
-
     public void handler(MessageInt message1, List<Target> targets) {
 
-        Message message=(Message) message1;
+        Message message = (Message) message1;
         int idMessage = message.getId();
         String xmlString = message.getXmlString();
         String strUpd = CreateXml.updateXmlString(xmlString, idMessage);
@@ -49,8 +49,7 @@ public class Dispatcher {
     }
 
 
-
-    public void init(List<Target> targets) {
+    public void init() {
         Boolean stop = false;
         while (!stop) {
 
@@ -67,16 +66,28 @@ public class Dispatcher {
 
     }
 
-    public void initTargets(List<Thread>threadsTargets){
+    public void initTargets(String filePath) {
 
-        for (Thread threadTarget : threadsTargets
-                ) {
-            threadTarget.start();
+
+        for (int i = 1; i < 11; i++) {
+            Target target = new Target(i);
+            targets.add(target);
+            target.createDir(filePath);
         }
+
+        for (Target t : targets) {
+            Thread thread = new Thread(() -> {
+                t.work(filePath);
+            });
+            thread.start();
+        }
+
+
+
 
     }
 
-    public void adMessageFromSender(MessageInt message){
+    public void adMessageFromSender(MessageInt message) {
         getSenderDispatcher().add(message);
     }
 
@@ -99,7 +110,7 @@ public class Dispatcher {
 
     }
 
-    public  void removeLogBook(String idDisp){
+    public void removeLogBook(String idDisp) {
         getStorage().remove(idDisp);
     }
 

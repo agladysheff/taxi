@@ -9,8 +9,6 @@ public class Main {
 
         String filePath = "d:/test/";
         List<Sender> senders = new ArrayList<>();
-        List<Target> targets = new ArrayList<>();
-        List<Thread>threadsTargets=new ArrayList<>();
 
 
         /*Создаем  отправителей*/
@@ -18,33 +16,22 @@ public class Main {
             senders.add(new Sender(i));
         }
 
-        /*Создаем  исполнителей*/
-        for (int i = 1; i < 11; i++) {
-            Target target = new Target(i);
-            targets.add(target);
-            target.createDir(filePath);
-        }
 
         /*Создаем диспетчера*/
         Dispatcher dispatcher = Dispatcher.getInstance();
 
-        /*Исполнители, каждый в своем потоке, принимают сообщения от диспетчера,
-         сохраняют их в своей папке и сообщают диспетчеру  о выполнении.*/
-        for (Target t : targets) {
-            Thread thread = new Thread(() -> {
-                t.work(filePath);
-            });
-            threadsTargets.add(thread);
-        }
 
 
+         /*Диспетчер в отдельном потоке создает исполнителей. Запускает их каждого в отдельном потоке.
+        Принимает сообщения от отправителя, присваивает входящий номер,
+        передает их исполнителям и делает запись в журнале переданных на выполнение сообщений
+        Исполнители, принимают сообщения от диспетчера,
+        сохраняют их в своей папке и сообщают диспетчеру  о выполнении.*/
 
-           /*Диспетчер в отдельном потоке принимает сообщения, присваивает входящий номер,
-        передает их исполнителям и делает запись в журнале переданных на выполнение сообщений*/
 
         Thread threadDispatcher = new Thread(() -> {
-            dispatcher.initTargets(threadsTargets);
-            dispatcher.init(targets);
+            dispatcher.initTargets(filePath);
+            dispatcher.init();
 
         }
         );
@@ -62,7 +49,6 @@ public class Main {
             });
             thread.start();
         }
-
 
 
 
