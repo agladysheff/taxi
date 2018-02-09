@@ -10,6 +10,7 @@ public class Main {
         String filePath = "d:/test/";
         List<Sender> senders = new ArrayList<>();
         List<Target> targets = new ArrayList<>();
+        List<Thread>threadsTargets=new ArrayList<>();
 
 
         /*Создаем  отправителей*/
@@ -27,9 +28,32 @@ public class Main {
         /*Создаем диспетчера*/
         Dispatcher dispatcher = Dispatcher.getInstance();
 
+        /*Исполнители, каждый в своем потоке, принимают сообщения от диспетчера,
+         сохраняют их в своей папке и сообщают диспетчеру  о выполнении.*/
+        for (Target t : targets) {
+            Thread thread = new Thread(() -> {
+                t.work(filePath);
+            });
+            threadsTargets.add(thread);
+        }
+
+
+
+           /*Диспетчер в отдельном потоке принимает сообщения, присваивает входящий номер,
+        передает их исполнителям и делает запись в журнале переданных на выполнение сообщений*/
+
+        Thread threadDispatcher = new Thread(() -> {
+            dispatcher.initTargets(threadsTargets);
+            dispatcher.init(targets);
+
+        }
+        );
+
+
+        threadDispatcher.start();
+
         /*Отправители создают и отправляют  каждый в своем потоке сообщения диспетчеру, в сообщение прописывается исполнитель*/
-        for (Sender x : senders
-                ) {
+        for (Sender x : senders) {
             Thread thread = new Thread(() -> {
                 for (int i = 0; i < 10; i++) {
                     int idTarget = (int) (Math.random() * 10) + 1;
@@ -39,30 +63,13 @@ public class Main {
             thread.start();
         }
 
-         /*Диспетчер в отдельном потоке принимает сообщения, присваивает входящий номер,
-        передает их исполнителям и делает запись в журнале переданных на выполнение сообщений*/
-
-        Thread threadDispatcher = new Thread(() -> {
-            dispatcher.init(targets);
-        }
-        );
 
 
-        threadDispatcher.start();
-
-        /*Исполнители, каждый в своем потоке, принимают сообщения от диспетчера,
-         сохраняют их в своей папке и сообщают диспетчеру  о выполнении.*/
-        for (Target t : targets
-                ) {
-            Thread thread = new Thread(() -> {
-                t.work(filePath);
-            });
-            thread.start();
-        }
 
         /*Запускаем сервис по остановке диспетчера,  5 сек после окончания выполнения задач исполнителями*/
         Thread threadStop = new Thread(() -> {
             dispatcher.serviceStop();
+
         });
         threadStop.start();
 
